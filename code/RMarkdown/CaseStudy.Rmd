@@ -2,10 +2,15 @@
 title: "Case-Study"
 author: "Meenu-Iram"
 date: "12/5/2017"
-output: html_document
+output: 
+  html_document:
+      keep_md : true
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(comment = NA, echo=FALSE, message = FALSE, warning = FALSE)
+knitr::opts_knit$set(root.dir = "/users/meenu/SMU/DoingDatascience-6306/CaseStudy2/CaseStudyTwoMaterials_2_2")
+
 library(knitr)
 library(rvest)
 library(dplyr)
@@ -14,21 +19,26 @@ library(RCurl)
 library(plyr)
 library(ggplot2)
 library(RColorBrewer)
+library(pastecs)
 
 ```
 
 
 ```{r echo=TRUE}
 
-df <- read.csv("/users/meenu/SMU/DoingDatascience-6306/CaseStudy2/CaseStudyTwoMaterials_2_2/Procrastination.csv", check.names = FALSE)
+#Q2
+df <- read.csv("Procrastination.csv", check.names = FALSE)
+
+```
+#### Nomber of rows and columns for Procrastination.csv
+```{r echo=TRUE}
 
 #2.a
-
-kable(nrow(df), format = "html")
-kable(NCOL(df), format = "html")
+kable(nrow(df))
+kable(ncol(df))
 
 #Cleanup
-#Remove rows with no age
+#2.b
 names(df) <- gsub( " ",  "", names(df), fixed = TRUE)
 colnames(df)[1] <- "Age"
 colnames(df)[7] <- "Occupation"
@@ -48,19 +58,21 @@ colnames(df)[55:59] <- (substr(names(df[55:59]),2,6))
 colnames(df)[60] <- "SelfProcast"
 colnames(df)[61] <- "OtherProcast"
 
-
+#2c
+#Remove rows with no age
 df<- df[!(is.na(df$Age) | df$Age==""),]
 
 df<- df[!(is.na(df$Gender) | df$Gender==""),]
 df<- df[!(is.na(df$WorkStatus) | df$WorkStatus==""),]
 df<- df[!(is.na(df$ResidntCntry) | df$ResidntCntry==0 | df$ResidntCntry==""),]
-df<- df[!(is.na(df$SelfProcast) | df$SelfProcast==""),]
-df<- df[!(is.na(df$OtherProcast) | df$OtherProcast=="" | df$OtherProcast==4),]
 
 df<- df[!(is.na(df$DurationYear) | 
             df$DurationYear=="" |
             df$DurationYear==999),]
 df$DurationYear <- ceiling(df$DurationYear)
+
+i <- sapply(df, is.factor)
+df[i] <- lapply(df[i], as.character)
 
 #Remove Male/Female from No of Sons column
 df$NoOfSons <- replace(df$NoOfSons,df$NoOfSons=="Female",0)
@@ -71,18 +83,40 @@ df<- df[!(is.na(df$Occupation) | df$Occupation=="Please specify"
           | df$Occupation=="please specify"
           | df$Occupation==0),]
 
-kable(sapply(df,class))
+df$Occupation <-replace(df$Occupation, grepl("^(?!.*?Multimedia\\\\sDeveloper|Technology\\\\sCurriculum).*Developer",df$Occupation, perl=TRUE,ignore.case=TRUE),"Software Engineer")
+df$Occupation <- replace(df$Occupation, grepl("\bAcademic\b", df$Occupation, perl=TRUE, ignore.case = TRUE), "Academic Assitant")
+df$Occupation <- replace(df$Occupation, grepl("\bProgrammer\b", df$Occupation, perl=TRUE, ignore.case = TRUE), "Software Engineer")
+df$Occupation <- replace(df$Occupation, grepl("Account(s|ing|ant)*", df$Occupation, perl=TRUE, ignore.case = TRUE), "Accountant")
+df$Occupation <- replace(df$Occupation, grepl("Art(ist)*", df$Occupation, perl=TRUE,ignore.case = TRUE), "Artist")
+df$Occupation <- replace(df$Occupation, grepl("Attorney", df$Occupation, perl=TRUE, ignore.case = TRUE), "Attorney")
+df$Occupation <- replace(df$Occupation, grepl("business(woman)*", df$Occupation, perl=TRUE,ignore.case = TRUE), "Business")
+df$Occupation <- replace(df$Occupation, grepl("Computer\\\\s(Consultant|Operator)*", df$Occupation, perl=TRUE,ignore.case = TRUE), "IT Consultant")
+df$Occupation <- replace(df$Occupation, grepl("IT", df$Occupation, perl=TRUE,ignore.case = TRUE), "IT Consultant")
+df$Occupation <- replace(df$Occupation, grepl("Professor", df$Occupation, perl=TRUE,ignore.case = TRUE), "Professor")
+df$Occupation <- replace(df$Occupation, grepl("Financ(e|ial)*", df$Occupation, perl=TRUE,ignore.case = TRUE), "Financial Consultant")
+df$Occupation <- replace(df$Occupation, grepl("^(Assistant)*.Teacher", df$Occupation, perl=TRUE,ignore.case = TRUE), "Teacher")
+df$Occupation <- replace(df$Occupation, grepl("Student/Teacher", df$Occupation, perl=TRUE,ignore.case = TRUE), "Teacher")
+df$Occupation <- replace(df$Occupation, grepl("Pre-school Teacher", df$Occupation, perl=TRUE,ignore.case = TRUE), "Teacher")
+df$Occupation <- replace(df$Occupation, grepl("special education teacher", df$Occupation, perl=TRUE,ignore.case = TRUE), "Teacher")
+df$Occupation <- replace(df$Occupation, grepl("Early child hood Teacher", df$Occupation, perl=TRUE,ignore.case = TRUE), "Teacher")
 
+#2d
+check_type <- sapply(df,class)
+
+#2e
 #Mean for all DP or each DP
 df$DPMean <- apply(df[,c(15:19)],1,mean)
 df$AIPMean <- apply(df[,c(20:34)],1,mean)
 df$GPMean <- apply(df[,c(35:54)],1,mean)
 df$SWLSMean <- apply(df[,c(55:59)],1,mean)
 
+### Cleanedup dataset can be found at /data/cleaned/DF.csv in the repository 
 write.csv(df,"DF.csv")
-nrow(df)
+
+###Sample data
 kable(head(df))
 
+#Q3
 #Web scraping
 
 url1 = "https://en.wikipedia.org/wiki/List_of_countries_by_Human_Development_Index#Complete_list_of_countries"
@@ -92,6 +126,7 @@ tables <- readHTMLTable(theURL,header = TRUE,stringsAsFactors = FALSE, encoding=
 
 scraped_df = data.frame("Country" = character(0), "HDI"=double(0.0))
 
+#Only pick the tables of interest
 scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[3]]$V3,"HDI"=tables[[3]]$V4))
 scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[6]]$V3,"HDI"=tables[[6]]$V4))
 scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[9]]$V3,"HDI"=tables[[9]]$V4))
@@ -100,12 +135,12 @@ scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[12]]$V3,"HDI"=tables
 scraped_df <- scraped_df[!(scraped_df$Country=="2016 estimates for 2015[1]" | 
                            scraped_df$Country=="HDI" | 
                             scraped_df$HDI=="Change from previous year[1]" ),]
-
+#Cleanup
 scraped_df$Country <- lapply(scraped_df$Country, function(x) {
                                   gsub("\u00A0", "", x) 
                             })
+#3b
 scraped_df$Country <- as.character(as.character(scraped_df$Country))
-
 scraped_df$HDI <- as.numeric(as.character(scraped_df$HDI))
 
 lev <- c(0.3, 0.5, 0.7, 0.9,1)
@@ -113,30 +148,113 @@ lev <- c(0.3, 0.5, 0.7, 0.9,1)
 lab <- c("Low human development index","Medium human development index", 
          "Medium-high human development index","High human development index")
 
-#scraped_df <- scraped_df %>% mutate(category=cut(HDI,lev,lab))
-
 HDICategory<-cut(scraped_df$HDI,lev,lab)
 scraped_df <- cbind(scraped_df, HDICategory)
 
+##### HDI.csv can be found at /data/cleaned in the repo
 write.csv(scraped_df,"HDI.csv", row.names = FALSE)
 
+##### Sample data from HDI.csv 
 kable(head(scraped_df))
 
+#3c
 merge_data <- merge(df,scraped_df, by.x = "ResidntCntry", by.y = "Country")
-
+##### Merged.csv can be found at /data/cleaned in the repo ####
 write.csv(merge_data,"Merged.csv")
-
+##### Sample data from Merged.csv 
 kable(head(merge_data))
 
 #4
+#4a
 merge_data <- merge_data[merge_data$Age>17, ]
 
+#Removing adults who are 67 and above to keep those still working
+merge_data <- subset(merge_data, Age < 65)
+
+# Bucketing the education infor to consolidate it. Replacing for college in Edu
+merge_data$Edu <- gsub('deg', '12-16 Years', merge_data$Edu)
+
+# Replacing for high school:
+merge_data$Edu <- gsub('dip', '12 Years or Less', merge_data$Edu)
+
+# Replacing for ma:
+merge_data$Edu <- gsub('ma', '16+ Years', merge_data$Edu)
+
+# Replacing for Grade school:
+merge_data$Edu <- gsub('grade', '12 Years or Less', merge_data$Edu)
+
+# Replacing for Ituni (prob a mistake):
+merge_data$Edu <- gsub('ltuni', '12-16 Years', merge_data$Edu)
+
+# Replacing for high school
+merge_data$Edu <- gsub('high', '12 Years or Less', merge_data$Edu)
+
+# Replacing for phd
+merge_data$Edu <- gsub('phd', '16+ Years', merge_data$Edu)
+
+# Replacing for lthigh
+merge_data$Edu <- gsub('lthigh', '12 Years or Less', merge_data$Edu)
+
+#4b. Descriptive Statistics for Age, Income, HDI, & the 4 mean columns. Data doesn't look right
+kable(stat.desc(merge_data[,cbind("Age", "AnnualIncome", "HDI", "DPMean", "AIPMean","GPMean", "SWLSMean")],options(scipen = 100, digits = 2), basic = F))
+
+#Create 2 histograms 
+#Remove NA for AnnualIncome
+merge_data<- merge_data[!(is.na(merge_data$AnnualIncome) | merge_data$AnnualIncome==""),]
+AnnualIncome<-c(merge_data$AnnualIncome)
+hist(AnnualIncome, col = "Light Blue", breaks = 6)
+main = "Distibution of Annual Income for Procrastination Survey"
+
+#Histograms for Age
+Age<-c(merge_data$Age)
+hist(Age, col = "Green", breaks = 6)
+
+# 4c.Frequencies for Gender, Work Status, Occupation (Have to bucket occupation first)
 kable(count(merge_data,'Gender'))
+
+  
+#barplot of frequency gender:
+barplot(table(merge_data$Gender), main='Frequency of Surveyed by Gender', xlab='Gender', ylab='Frequency', col = c("Light Blue", "Grey"))
+     
+#frequency table Work Status:
 kable(count(merge_data,'WorkStatus'))
-kable(count(merge_data,'Occupation'))
+    
+#barplot of frequency work status:
+barplot(table(merge_data$WorkStatus), main='Frequency of Surveyed by Employment Status', xlab='Work Status', ylab='Frequency', col = c("Light Green", "Light Blue", "Yellow", "Grey", "Brown"))
 
-count(merge_data, c("OtherProcast", "OtherProcast"))         
+#Occupation
+#Factor the column and get the total count for each occupation
+merge_data$Occupation <- factor(merge_data$Occupation)
+grouped <- count(merge_data,'Occupation')
 
+#Display top 10 jobs
+newdata <- head(grouped[order(-grouped$freq),],11)
+newdata <- newdata[-1,]
+newdata$Occupation <- as.character(newdata$Occupation)
+newdata$Occupation[is.na(newdata$Occupation)] <- "Missing data"
+kable(newdata)
+
+#### Complete occupation frequency table can be found at /reports/tables
+write.csv(newdata,"OccupationFreq.csv")
+
+    
+#4d. Count surveyors by Country in descending order (make it better)
+grouped_cntry <- count(merge_data,'ResidntCntry')
+table <- head(grouped_cntry[order(-grouped_cntry$freq),],10)
+kable(table)
+
+#### Complete occupation frequency table can be found at /reports/tables
+write.csv(grouped_cntry,"CountryFreq.csv")
+
+merge_data<- merge_data[!(is.na(merge_data$SelfProcast) | merge_data$SelfProcast==""),]
+merge_data<- merge_data[!(is.na(merge_data$OtherProcast) | merge_data$OtherProcast=="" | merge_data$OtherProcast==4),]
+
+procast_count <- count(merge_data, c("SelfProcast", "OtherProcast"))       
+procast_count <- procast_count[-c(2,3),]
+kable(procast_count)
+
+#5
+#5b
 df_CntryGPMean <- aggregate( GPMean ~ ResidntCntry, merge_data, mean )
 
 df_CntryHDI <- aggregate( HDI ~ ResidntCntry, merge_data, mean )
@@ -151,11 +269,13 @@ ggplot(top15_GPrank, aes(x= reorder(ResidntCntry, -GPMean), y = GPMean, fill= HD
   geom_bar(stat ="identity") +
   ggtitle("Countrywise Plot of the General Procrastination Scale") +
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  labs(x="Country", y="GPMean") +
+  labs(x="Country", y="GP Average") +
   scale_color_brewer(palette="Dark2")
 
+#### Top 15 GP rank nations table can be found at /reports/tables
+write.csv(top15_GPrank,"GPRank.csv")
 
-#5.c
+#5c
 df_CntryAIPMean <- aggregate( AIPMean ~ ResidntCntry, merge_data, mean )
 
 df_mergeCntryAIP <- merge(df_CntryAIPMean,df_CntryHDI,by = "ResidntCntry")
@@ -168,39 +288,40 @@ ggplot(top15_AIPrank, aes(x= reorder(ResidntCntry, -AIPMean), y = AIPMean, fill=
   geom_bar(stat ="identity") +
   ggtitle("Countrywise plot of Adult Inventory of Procrastination Index") +
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  labs(x="Country", y="AIPMean") +
+  labs(x="Country", y="AIP Average") +
   scale_color_brewer(palette="Set1")
 
-#Remove NA for AnnualIncome
-merge_data<- merge_data[!(is.na(merge_data$AnnualIncome) | merge_data$AnnualIncome==""),]
-nrow(merge_data)
+#### Top 15 AIP rank nations table can be found at /reports/tables
+write.csv(top15_AIPrank,"AIPRank.csv")
+
+#5d
+merge_data$Gender<- factor(merge_data$Gender)
 ggplot(merge_data, aes(x=Age, y=AnnualIncome)) + 
   geom_point(aes(col=Gender))+
   geom_smooth(method=lm) +
-labs(subtitle="Age Vs Income", 
-     y="Income", 
+  theme(plot.title = element_text(hjust = 0.5)) +
+labs(y="Income", 
      x="Age", 
-     title="Scatterplot", 
-     caption = "Source: Procrastination")
+     title="Age Vs Income Scatterplot")
 
-merge_data$Gender<- factor(merge_data$Gender)
+### There seems to be a strong correlation between Age and Income.
 
+#5e
 ggplot(merge_data, aes(x=SWLSMean, y=HDI)) + 
   geom_point(aes(col=Gender))+
   geom_smooth(method=lm) +
-  labs(subtitle="Life Satisfaction Vs HDI", 
-       y="HDI", 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  labs(y="HDI", 
        x="Life Satisfaction", 
-       title="Scatterplot", 
-       caption = "Source: Procrastination")
-
+       title="Life Satisfaction Vs HDI Scatterplot") 
 
 ggplot(merge_data, aes(x= reorder(HDICategory, -SWLSMean), y = SWLSMean, fill = Gender)) +
   geom_bar(stat ="identity") +
   ggtitle("Human Developement Index Category Vs Life Satisfaction") +
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  labs(x="HDI Category", y="Life Satisfaction") +
+  labs(x="HDI Category", y="Life Satisfaction Index") +
   scale_color_brewer(palette="Set1")
 
-```
+## For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
 
+```
