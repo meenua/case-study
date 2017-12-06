@@ -1,0 +1,286 @@
+---
+title: "Case-Study"
+author: "Meenu-Iram"
+date: "12/5/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(rvest)
+library(dplyr)
+library(XML)
+library(RCurl)
+library(plyr)
+library(ggplot2)
+library(RColorBrewer)
+
+```
+
+
+```{r echo=TRUE}
+
+df <- read.csv("/users/meenu/SMU/DoingDatascience-6306/CaseStudy2/CaseStudyTwoMaterials_2_2/Procrastination.csv", check.names = FALSE)
+
+#2.a
+
+kable(nrow(df), format = "html")
+kable(NCOL(df), format = "html")
+
+#Cleanup
+#Remove rows with no age
+names(df) <- gsub( " ",  "", names(df), fixed = TRUE)
+colnames(df)[1] <- "Age"
+colnames(df)[7] <- "Occupation"
+colnames(df)[8] <- "DurationYear"
+colnames(df)[9] <- "DurationMon"
+colnames(df)[10] <- "CommSize"
+colnames(df)[11] <- "ResidntCntry"
+colnames(df)[12] <- "MaritlStatus"
+colnames(df)[13] <- "NoOfSons"
+colnames(df)[14] <- "NoOfDghtrs"
+colnames(df)[15:19] <- (substr(names(df[15:19]),2,4))
+colnames(df)[20:28] <- (substr(names(df[20:28]),2,5))
+colnames(df)[29:34] <- (substr(names(df[29:34]),2,6))
+colnames(df)[35:43] <- (substr(names(df[35:43]),2,4))
+colnames(df)[44:54] <- (substr(names(df[44:54]),2,5))
+colnames(df)[55:59] <- (substr(names(df[55:59]),2,6))
+colnames(df)[60] <- "SelfProcast"
+colnames(df)[61] <- "OtherProcast"
+
+
+df<- df[!(is.na(df$Age) | df$Age==""),]
+
+df<- df[!(is.na(df$Gender) | df$Gender==""),]
+df<- df[!(is.na(df$WorkStatus) | df$WorkStatus==""),]
+df<- df[!(is.na(df$ResidntCntry) | df$ResidntCntry==0 | df$ResidntCntry==""),]
+df<- df[!(is.na(df$SelfProcast) | df$SelfProcast==""),]
+df<- df[!(is.na(df$OtherProcast) | df$OtherProcast=="" | df$OtherProcast==4),]
+
+df<- df[!(is.na(df$DurationYear) | 
+            df$DurationYear=="" |
+            df$DurationYear==999),]
+df$DurationYear <- ceiling(df$DurationYear)
+
+#Remove Male/Female from No of Sons column
+df$NoOfSons <- replace(df$NoOfSons,df$NoOfSons=="Female",0)
+df$NoOfSons <- replace(df$NoOfSons,df$NoOfSons=="Male",1)
+
+#Cuurent occupation
+df<- df[!(is.na(df$Occupation) | df$Occupation=="Please specify"
+          | df$Occupation=="please specify"
+          | df$Occupation==0),]
+
+kable(sapply(df,class))
+
+#Mean for all DP or each DP
+df$DPMean <- apply(df[,c(15:19)],1,mean)
+df$AIPMean <- apply(df[,c(20:34)],1,mean)
+df$GPMean <- apply(df[,c(35:54)],1,mean)
+df$SWLSMean <- apply(df[,c(55:59)],1,mean)
+
+write.csv(df,"DF.csv")
+nrow(df)
+kable(head(df))
+
+#Web scraping
+
+url1 = "https://en.wikipedia.org/wiki/List_of_countries_by_Human_Development_Index#Complete_list_of_countries"
+
+theURL <- getURL(url1)
+tables <- readHTMLTable(theURL,header = TRUE,stringsAsFactors = FALSE, encoding="UTF-8")
+
+scraped_df = data.frame("Country" = character(0), "HDI"=double(0.0))
+
+scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[3]]$V3,"HDI"=tables[[3]]$V4))
+scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[6]]$V3,"HDI"=tables[[6]]$V4))
+scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[9]]$V3,"HDI"=tables[[9]]$V4))
+scraped_df <- rbind(scraped_df,data.frame("Country"=tables[[12]]$V3,"HDI"=tables[[12]]$V4))
+
+scraped_df <- scraped_df[!(scraped_df$Country=="2016 estimates for 2015[1]" | 
+                           scraped_df$Country=="HDI" | 
+                            scraped_df$HDI=="Change from previous year[1]" ),]
+
+scraped_df$Country <- lapply(scraped_df$Country, function(x) {
+                                  gsub("\u00A0", "", x) 
+                            })
+scraped_df$Country <- as.character(as.character(scraped_df$Country))
+
+scraped_df$HDI <- as.numeric(as.character(scraped_df$HDI))
+
+lev <- c(0.3, 0.5, 0.7, 0.9,1)
+
+lab <- c("Low human development index","Medium human development index", 
+         "Medium-high human development index","High human development index")
+
+#scraped_df <- scraped_df %>% mutate(category=cut(HDI,lev,lab))
+
+HDICategory<-cut(scraped_df$HDI,lev,lab)
+scraped_df <- cbind(scraped_df, HDICategory)
+
+write.csv(scraped_df,"HDI.csv", row.names = FALSE)
+
+kable(head(scraped_df))
+
+merge_data <- merge(df,scraped_df, by.x = "ResidntCntry", by.y = "Country")
+
+write.csv(merge_data,"Merged.csv")
+
+kable(head(merge_data))
+
+#4
+merge_data <- merge_data[merge_data$Age>17, ]
+
+kable(count(merge_data,'Gender'))
+kable(count(merge_data,'WorkStatus'))
+kable(count(merge_data,'Occupation'))
+
+count(merge_data, c("OtherProcast", "OtherProcast"))         
+
+df_CntryGPMean <- aggregate( GPMean ~ ResidntCntry, merge_data, mean )
+
+df_CntryHDI <- aggregate( HDI ~ ResidntCntry, merge_data, mean )
+
+df_mergeCntryGP <- merge(df_CntryGPMean,df_CntryHDI,by = "ResidntCntry")
+
+df_mergeCntryGP$HDI <- factor(df_mergeCntryGP$HDI)
+
+top15_GPrank <- head(df_mergeCntryGP[order(df_mergeCntryGP$GPMean, decreasing= T),], n = 15)
+
+ggplot(top15_GPrank, aes(x= reorder(ResidntCntry, -GPMean), y = GPMean, fill= HDI)) +
+  geom_bar(stat ="identity") +
+  ggtitle("Countrywise Plot of the General Procrastination Scale") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x="Country", y="GPMean") +
+  scale_color_brewer(palette="Dark2")
+
+#Removing adults who are 67 and above to keep those still working
+dfm2 <- subset(dfm2, Age < 65)
+
+# Bucketing the education infor to consolidate it. Replacing for college in Edu
+dfm2$Edu <- gsub('deg', '12-16 Years', dfm2$Edu)
+
+
+# Replacing for high school:
+dfm2$Edu <- gsub('dip', '12 Years or Less', dfm2$Edu)
+
+
+# Replacing for ma:
+dfm2$Edu <- gsub('ma', '16+ Years', dfm2$Edu)
+
+
+# Replacing for Grade school:
+dfm2$Edu <- gsub('grade', '12 Years or Less', dfm2$Edu)
+
+
+# Replacing for Ituni (prob a mistake):
+dfm2$Edu <- gsub('ltuni', '12-16 Years', dfm2$Edu)
+
+
+# Replacing for high school
+dfm2$Edu <- gsub('high', '12 Years or Less', dfm2$Edu)
+
+
+# Replacing for phd
+dfm2$Edu <- gsub('phd', '16+ Years', dfm2$Edu)
+
+
+# Replacing for lthigh
+dfm2$Edu <- gsub('lthigh', '12 Years or Less', dfm2$Edu)
+
+
+#4b. Descriptive Statistics for Age, Income, HDI, & the 4 mean columns. Data doesn't look right
+library(pastecs)
+library(pastecs)
+stat.desc(dfm2[,cbind("Age", "AnnualIncome", "HDI", "DPMean", "AIPMean","GPMean", "SWLSMean")],options(scipen = 100, digits = 2), basic = F)
+
+
+#Create 2 histograms 
+AnnualIncome<-c(dfm2$AnnualIncome)
+hist(AnnualIncome)
+hist(AnnualIncome, col = "Light Blue", breaks = 6)
+main = "Distibution of Annual Income for Procrastination Survey"
+
+
+#Histograms for Age
+Age<-c(dfm2$Age)
+hist(Age)
+hist(Age, col = "Light Grey", breaks = 6)
+
+
+# 4c.Frequencies for Gender, Work Status, Occupation (Have to bucket occupation first)
+tblgender <- table(dfm2$Gender)
+print(tblgender)
+  
+     
+#barplot of frequency gender:
+barplot(table(dfm2$Gender), main='Frequency of Surveyed by Gender', xlab='Gender', ylab='Frequency', col = c("Light Blue", "Grey"))
+
+     
+#frequency table Work Status:
+fqtblws <- table(dfm2$WorkStatus)
+print(fqtblws)
+    
+     
+#barplot of frequency work status:
+barplot(table(dfm2$WorkStatus), main='Frequency of Surveyed by Employment Status', xlab='Work Status', ylab='Frequency', col = c("Light Green", "Light Blue", "Yellow", "Grey", "Brown"))
+    
+
+#4d. Count surveyors by Country in descending order (make it better)
+library(dplyr)
+table<-(dfm2 %>% count(ResidntCntry, sort=TRUE))
+library(knitr)
+library(kableExtra)
+kable(table)%>%
+  kable_styling(bootstrap_options = c("striped","hover"), full_width = F, position = "center")
+
+
+#5.c
+df_CntryAIPMean <- aggregate( AIPMean ~ ResidntCntry, merge_data, mean )
+
+df_mergeCntryAIP <- merge(df_CntryAIPMean,df_CntryHDI,by = "ResidntCntry")
+
+df_mergeCntryAIP$HDI <- factor(df_mergeCntryAIP$HDI)
+
+top15_AIPrank <- head(df_mergeCntryAIP[order(df_mergeCntryAIP$AIPMean, decreasing= T),], n = 15)
+
+ggplot(top15_AIPrank, aes(x= reorder(ResidntCntry, -AIPMean), y = AIPMean, fill= HDI)) +
+  geom_bar(stat ="identity") +
+  ggtitle("Countrywise plot of Adult Inventory of Procrastination Index") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x="Country", y="AIPMean") +
+  scale_color_brewer(palette="Set1")
+
+#Remove NA for AnnualIncome
+merge_data<- merge_data[!(is.na(merge_data$AnnualIncome) | merge_data$AnnualIncome==""),]
+nrow(merge_data)
+ggplot(merge_data, aes(x=Age, y=AnnualIncome)) + 
+  geom_point(aes(col=Gender))+
+  geom_smooth(method=lm) +
+labs(subtitle="Age Vs Income", 
+     y="Income", 
+     x="Age", 
+     title="Scatterplot", 
+     caption = "Source: Procrastination")
+
+merge_data$Gender<- factor(merge_data$Gender)
+
+ggplot(merge_data, aes(x=SWLSMean, y=HDI)) + 
+  geom_point(aes(col=Gender))+
+  geom_smooth(method=lm) +
+  labs(subtitle="Life Satisfaction Vs HDI", 
+       y="HDI", 
+       x="Life Satisfaction", 
+       title="Scatterplot", 
+       caption = "Source: Procrastination")
+
+
+ggplot(merge_data, aes(x= reorder(HDICategory, -SWLSMean), y = SWLSMean, fill = Gender)) +
+  geom_bar(stat ="identity") +
+  ggtitle("Human Developement Index Category Vs Life Satisfaction") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x="HDI Category", y="Life Satisfaction") +
+  scale_color_brewer(palette="Set1")
+
+```
+
