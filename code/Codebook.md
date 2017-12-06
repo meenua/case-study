@@ -6,7 +6,7 @@ This document describes the code for CaseStudy.Rmd
 # Project description
 As the name suggests, this study was to assess procrastination and its associations with distress and life satisfaction across the life span.
 
-##Loading data
+## Loading data                                                                                       
      Raw data(Procrastination.csv)                            
      This dataset has 4265 rows 61 columns                           
      Sample raw data with first 3 rows and first 10 columns is shown below                       
@@ -108,3 +108,4 @@ As the name suggests, this study was to assess procrastination and its associati
       library(plyr)
       library(ggplot2)
       library(RColorBrewer)
+      library(pastecs)
