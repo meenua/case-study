@@ -1,13 +1,13 @@
 # Codebook
 Meenu-Iram  
 12/6/2017  
-This document describes the code for CaseStudy.Rmd
+This document describes the code for CaseStudy.Rmd (This file is placed at /code/Rmarkdown location)                      
 
 # Project description
 As the name suggests, this study was to assess procrastination and its associations with distress and life satisfaction across the life span.
 
 ## Loading data                                                                                       
-     Raw data(Procrastination.csv)                            
+     Raw data(Dataset location - /data/raw/Procrastination.csv)                            
      This dataset has 4265 rows 61 columns                           
      Sample raw data with first 3 rows and first 10 columns is shown below                       
 | Age  	| Gender 	| Kids     	| Edu 	| Work Status 	| Annual Income 	| Current Occupation 	| How long have you,held this position?: Years 	| How long have you,held this position?: Months 	| Community size |  
@@ -50,6 +50,9 @@ As the name suggests, this study was to assess procrastination and its associati
 
   Apart from cleaning up, four new columns were added to the dataset, viz. DPMean, AIPMean, GPMean and SWLSMean. As the name suggests, each is an average of the index.  
   
+  Cleaned dataset is placed under /data/cleaned                                                                       
+  
+  
 ## Web Scraping 
 
     Scraped human development index table from internet                                                                                        (https://en.wikipedia.org/wiki/List_of_countries_by_Human_Development_Index#Complete_list_of_countries) 
@@ -67,7 +70,9 @@ As the name suggests, this study was to assess procrastination and its associati
     The cleanedup data from Procrastination.csv was merged with the web scraped data on Country column.
     The merged dataset has 67 columns. It contains all 61 columns from Procrastination.csv.         
     In addition the, merge data contains the four columns of average for DP,AIP,GP,SWLS indexes viz. DPMean, AIPMean, GPMean, SWLSMean and also HDI and HDICategory columns from the web scraped data.          
-
+    
+    Location for the HDI.csv and the merged dataset - /data/cleaned                                                              
+    
 ## Data Processing
     Analysis is done only on those observations where the pariticipant's age was 18 or above.   
     
