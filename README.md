@@ -1,4 +1,4 @@
-# case-study
+
 Executive Summary
 
 Our company MAIB Consulting specializes in providing self-help and stress-coping strategies and trainings for working adults. We are a multinational company with offices in major countries across the globe. We recognize in today’s world, stress is as common as the common cold. But unlike the common cold it can have a lasting negative impact on people’s personal lives, their productivity at work, and to the bottom line of the companies they work for.
