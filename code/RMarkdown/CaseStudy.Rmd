@@ -255,6 +255,7 @@ kable(procast_count)
 
 #5
 #5b
+#get the average of the score for each country and merge the data
 df_CntryGPMean <- aggregate( GPMean ~ ResidntCntry, merge_data, mean )
 
 df_CntryHDI <- aggregate( HDI ~ ResidntCntry, merge_data, mean )
@@ -263,6 +264,7 @@ df_mergeCntryGP <- merge(df_CntryGPMean,df_CntryHDI,by = "ResidntCntry")
 
 df_mergeCntryGP$HDI <- factor(df_mergeCntryGP$HDI)
 
+# Get top 15 nations by their score
 top15_GPrank <- head(df_mergeCntryGP[order(df_mergeCntryGP$GPMean, decreasing= T),], n = 15)
 
 ggplot(top15_GPrank, aes(x= reorder(ResidntCntry, -GPMean), y = GPMean, fill= HDI)) +
@@ -276,12 +278,13 @@ ggplot(top15_GPrank, aes(x= reorder(ResidntCntry, -GPMean), y = GPMean, fill= HD
 write.csv(top15_GPrank,"GPRank.csv")
 
 #5c
+#get the average of the score for each country and merge the data
 df_CntryAIPMean <- aggregate( AIPMean ~ ResidntCntry, merge_data, mean )
 
 df_mergeCntryAIP <- merge(df_CntryAIPMean,df_CntryHDI,by = "ResidntCntry")
 
 df_mergeCntryAIP$HDI <- factor(df_mergeCntryAIP$HDI)
-
+# Get top 15 nations by their score
 top15_AIPrank <- head(df_mergeCntryAIP[order(df_mergeCntryAIP$AIPMean, decreasing= T),], n = 15)
 
 ggplot(top15_AIPrank, aes(x= reorder(ResidntCntry, -AIPMean), y = AIPMean, fill= HDI)) +
@@ -324,4 +327,18 @@ ggplot(merge_data, aes(x= reorder(HDICategory, -SWLSMean), y = SWLSMean, fill = 
 
 ## For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
 
+```
+### We tried to find out which are top nations with highest life satisfaction index.
+### The plot suggests Lithuania as the number one Country with the highest life satisfaction index.
+    
+```{r}
+df_CntrySWLSMean <- aggregate( SWLSMean ~ ResidntCntry, merge_data, mean )
+top15_SWLSrank <- head(df_CntrySWLSMean[order(df_CntrySWLSMean$SWLSMean, decreasing= T),], n = 15)
+
+ggplot(top15_SWLSrank, aes(x= reorder(ResidntCntry, -SWLSMean), y = SWLSMean, fill = ResidntCntry)) +
+  geom_bar(stat ="identity") +
+  ggtitle("Country Vs Life Satisfaction") +
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x="Country", y="Life Satisfaction Index") +
+  scale_color_brewer(palette="Set1")
 ```

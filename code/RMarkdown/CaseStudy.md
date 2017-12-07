@@ -463,3 +463,7 @@ ggplot(merge_data, aes(x= reorder(HDICategory, -SWLSMean), y = SWLSMean, fill = 
 ```r
 ## For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
 ```
+### We tried to find out which are top nations with highest life satisfaction index.
+### The plot suggests Lithuania as the number one Country with the highest life satisfaction index.
+    
+![](CaseStudy_files/figure-html/unnamed-chunk-3-1.png)<!-- -->

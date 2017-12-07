@@ -38,6 +38,8 @@ As the name suggests, this study was to assess procrastination and its associati
   Do you consider yourself a procrastinator?  
   Do others consider you a procrastinator?  
   
+  AIP consists of 15-items on a 5-point Likert scale, DP - 5 items, GP - 20 items and SWLS consists of 5 items as well.
+  
 ## Raw data cleanup                           
   Some of the column names were big. All of them were reduced to 12 letters maximum length.                           
   For eg. How long have you held this position ?: Years - renamed to DurationYears                          
