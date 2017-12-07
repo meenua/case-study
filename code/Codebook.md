@@ -20,7 +20,7 @@ As the name suggests, this study was to assess procrastination and its associati
   Age	  
   Gender  
   Kids	  
-  Edu	- Education level 
+  Edu	- Education level                     
   Work Status	- What kind of job (full-time, part-time, unemployed etc) 
   Annual Income	  
   Current Occupation	  
@@ -55,7 +55,7 @@ As the name suggests, this study was to assess procrastination and its associati
   
 ## Web Scraping 
 
-    Scraped human development index table from internet                                                                                        (https://en.wikipedia.org/wiki/List_of_countries_by_Human_Development_Index#Complete_list_of_countries) 
+    Scraped human development index table from internet                                                                         (https://en.wikipedia.org/wiki/List_of_countries_by_Human_Development_Index#Complete_list_of_countries) 
     Cleaned up sample web scraped data is as follows:                                                                
 | Country   	| HDI   	| HDICategory                         	|
 |-----------	|-------	|-------------------------------------	|
@@ -71,7 +71,7 @@ As the name suggests, this study was to assess procrastination and its associati
     The merged dataset has 67 columns. It contains all 61 columns from Procrastination.csv.         
     In addition the, merge data contains the four columns of average for DP,AIP,GP,SWLS indexes viz. DPMean, AIPMean, GPMean, SWLSMean and also HDI and HDICategory columns from the web scraped data.          
     
-    Location for the HDI.csv and the merged dataset - /data/cleaned                                                              
+    Location for HDI.csv and the merged dataset - /data/cleaned                                                              
     
 ## Data Processing
     Analysis is done only on those observations where the pariticipant's age was 18 or above.   
