@@ -374,6 +374,7 @@ kable(procast_count)
 ```r
 #5
 #5b
+#get the average of the score for each country and merge the data
 df_CntryGPMean <- aggregate( GPMean ~ ResidntCntry, merge_data, mean )
 
 df_CntryHDI <- aggregate( HDI ~ ResidntCntry, merge_data, mean )
@@ -382,6 +383,7 @@ df_mergeCntryGP <- merge(df_CntryGPMean,df_CntryHDI,by = "ResidntCntry")
 
 df_mergeCntryGP$HDI <- factor(df_mergeCntryGP$HDI)
 
+# Get top 15 nations by their score
 top15_GPrank <- head(df_mergeCntryGP[order(df_mergeCntryGP$GPMean, decreasing= T),], n = 15)
 
 ggplot(top15_GPrank, aes(x= reorder(ResidntCntry, -GPMean), y = GPMean, fill= HDI)) +
@@ -399,12 +401,13 @@ ggplot(top15_GPrank, aes(x= reorder(ResidntCntry, -GPMean), y = GPMean, fill= HD
 write.csv(top15_GPrank,"GPRank.csv")
 
 #5c
+#get the average of the score for each country and merge the data
 df_CntryAIPMean <- aggregate( AIPMean ~ ResidntCntry, merge_data, mean )
 
 df_mergeCntryAIP <- merge(df_CntryAIPMean,df_CntryHDI,by = "ResidntCntry")
 
 df_mergeCntryAIP$HDI <- factor(df_mergeCntryAIP$HDI)
-
+# Get top 15 nations by their score
 top15_AIPrank <- head(df_mergeCntryAIP[order(df_mergeCntryAIP$AIPMean, decreasing= T),], n = 15)
 
 ggplot(top15_AIPrank, aes(x= reorder(ResidntCntry, -AIPMean), y = AIPMean, fill= HDI)) +
@@ -434,36 +437,14 @@ labs(y="Income",
 
 ![](CaseStudy_files/figure-html/unnamed-chunk-2-7.png)<!-- -->
 
-```r
 ### There seems to be a strong correlation between Age and Income.
 
-#5e
-ggplot(merge_data, aes(x=SWLSMean, y=HDI)) + 
-  geom_point(aes(col=Gender))+
-  geom_smooth(method=lm) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  labs(y="HDI", 
-       x="Life Satisfaction", 
-       title="Life Satisfaction Vs HDI Scatterplot") 
-```
+![](CaseStudy_files/figure-html/unnamed-chunk-3-1.png)<!-- -->![](CaseStudy_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
 
-![](CaseStudy_files/figure-html/unnamed-chunk-2-8.png)<!-- -->
+### For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
 
-```r
-ggplot(merge_data, aes(x= reorder(HDICategory, -SWLSMean), y = SWLSMean, fill = Gender)) +
-  geom_bar(stat ="identity") +
-  ggtitle("Human Developement Index Category Vs Life Satisfaction") +
-  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  labs(x="HDI Category", y="Life Satisfaction Index") +
-  scale_color_brewer(palette="Set1")
-```
 
-![](CaseStudy_files/figure-html/unnamed-chunk-2-9.png)<!-- -->
-
-```r
-## For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
-```
 ### We tried to find out which are top nations with highest life satisfaction index.
 ### The plot suggests Lithuania as the number one Country with the highest life satisfaction index.
     
-![](CaseStudy_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](CaseStudy_files/figure-html/unnamed-chunk-4-1.png)<!-- -->

@@ -306,9 +306,11 @@ ggplot(merge_data, aes(x=Age, y=AnnualIncome)) +
 labs(y="Income", 
      x="Age", 
      title="Age Vs Income Scatterplot")
+```
 
 ### There seems to be a strong correlation between Age and Income.
 
+```{r}
 #5e
 ggplot(merge_data, aes(x=SWLSMean, y=HDI)) + 
   geom_point(aes(col=Gender))+
@@ -324,10 +326,11 @@ ggplot(merge_data, aes(x= reorder(HDICategory, -SWLSMean), y = SWLSMean, fill = 
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1)) + 
   labs(x="HDI Category", y="Life Satisfaction Index") +
   scale_color_brewer(palette="Set1")
-
-## For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
-
 ```
+
+### For the scatter plot, the correlation line is horizontal indicating that there is no correlation between Life Satisfaction Index and Human Development Index. However, a bar plot of HDI Category against the Life Satisfaction Index suggests that for high levels of HDI Category, Life Satisfaction is more.
+
+
 ### We tried to find out which are top nations with highest life satisfaction index.
 ### The plot suggests Lithuania as the number one Country with the highest life satisfaction index.
     
